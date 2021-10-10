@@ -1,13 +1,64 @@
 import yfinance as yf
 import numpy as np
+from numpy import genfromtxt
 import pandas as pd
+import progressbar
 
+
+def pull_ticks(fname, refresh_bool):
+    # setup progress bar parameters
+    widgets=[
+        ' [', progressbar.Timer(), '] ',
+        progressbar.Bar(),
+        ' (', progressbar.ETA(), ') ',
+    ]    
+
+    years_back = 10
+    np_len = years_back*52*5
+
+    file = open(fname)
+    ref_ticks = file.read().split('\n')
+    file.close()
+
+    ans_arr = np.zeros([len(ref_ticks), np_len, 10])
+    ans_ticks = []
+
+    if refresh_bool:
+        print('Refreshing ticks from yfinance, this may take a minute ...')
+    else:
+        print('Pulling tick data from local drive...')
+    i = 0
+    for ref_tick in progressbar.progressbar(ref_ticks, widgest=widgets):
+        try:
+            if refresh_bool:
+                tick = yf.Ticker(ref_tick)
+                reference = tick.history(period="10y")
+                reference = normalize_tick(reference, np_len)
+                np.savetxt('local_data/ref_dat_' + str(ref_tick) + '.csv', reference, delimiter=",")
+            else:
+                reference = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',')
+        
+            llen = len(reference[:,0])
+            ans_ticks.append(str(ref_tick))
+            ans_arr[i, 0:llen, :] = reference
+            i = i + 1
+
+        except OSError:
+            print(str(ref_tick) + ' could not be found in local_data, will omit from calculations')
+
+        except AttributeError: 
+            print('Could not find stock ticker ' + str(ref_tick) + ' from yfinance, omitting in calculations')
+
+    # Create new array of appropriate size
+    ans_arr2 = np.array(ans_arr[0:i-1, 0:llen, :])
+
+
+    return ans_arr2, ans_ticks
 
 
 def normalize_tick(df, np_len):
 
-    arr = np.zeros([10,np_len])
-    arr_temp = np.zeros([0,len(df.index)])
+    arr = np.zeros([np_len, 10])
 
     # normalize target high & low values to percent of opening values, create new columns for 'day of week' and 'week of year'
     df['percent_high'] = np.where(df['High'] < 1, df['High'], df['High']/df['Open'])
@@ -19,16 +70,17 @@ def normalize_tick(df, np_len):
     df['week_num']=df['Date'].dt.isocalendar().week
 
     # write to a numpy array
-    
-    arr[0,0:len(df.index)] = df['Year']
-    arr[1,0:len(df.index)] = df['week_num']
-    arr[2,0:len(df.index)] = df['day_of_week']
-    arr[3,0:len(df.index)] = df['High']
-    arr[4,0:len(df.index)] = df['Low']
-    arr[5,0:len(df.index)] = df['Open']
-    arr[6,0:len(df.index)] = df['Close']    
-    arr[7,0:len(df.index)] = df['percent_high']
-    arr[8,0:len(df.index)] = df['percent_low']
-    arr[9,0:len(df.index)] = df['percent_close']
+    llen = len(df.index)
+
+    arr[0:llen, 0] = df['Year']
+    arr[0:llen, 1] = df['week_num']
+    arr[0:llen, 2] = df['day_of_week']
+    arr[0:llen, 3] = df['High']
+    arr[0:llen, 4] = df['Low']
+    arr[0:llen, 5] = df['Open']
+    arr[0:llen, 6] = df['Close']    
+    arr[0:llen, 7] = df['percent_high']
+    arr[0:llen, 8] = df['percent_low']
+    arr[0:llen, 9] = df['percent_close']
 
     return arr
