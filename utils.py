@@ -50,8 +50,7 @@ def pull_ticks(fname, refresh_bool):
             print('Could not find stock ticker ' + str(ref_tick) + ' from yfinance, omitting in calculations')
 
     # Create new array of appropriate size
-    ans_arr2 = np.array(ans_arr[0:i-1, 0:llen, :])
-
+    ans_arr2 = np.array(ans_arr[0:i, 0:llen, :])
 
     return ans_arr2, ans_ticks
 
