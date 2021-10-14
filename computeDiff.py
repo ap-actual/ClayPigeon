@@ -8,6 +8,9 @@ import datetime as dt
 
 def getTradeIloc(arr, date_tgt):
 
+    # will return 2d array that is size [n_ticks, np_len]
+    # each row is a tick, each column is the start i_loc that matches date_tgt
+
     np_len = 10  # basically how many years back to go
 
     td_week = dt.date(date_tgt[0], date_tgt[1], date_tgt[2]).isocalendar()[1]
@@ -22,7 +25,12 @@ def getTradeIloc(arr, date_tgt):
             np.logical_and(arr[i,:,1] == td_week, arr[i,:,2] == td_day_of_week))
         
         # put target location as first spot of array
-        iloc_arr[i,0] = ii[0][len(ii[0])-1]
+        # but first check if it's year matches this year, if not leave as -1
+        if arr[i, ii[0][len(ii[0])-1], 0] == date_tgt[0]:
+            iloc_arr[i,0] = ii[0][len(ii[0])-1]
+        else:
+            iloc_arr[i,0] = -1
+
         iloc_arr[i,1:len(ii[0])] = ii[0][0:len(ii[0])-1]
         i = i+1
 
@@ -32,28 +40,35 @@ def getTradeIloc(arr, date_tgt):
 
 def getDiff(tick_data, tick_names, date_tgt, tdp):
 
+    widgets=[
+        ' [', progressbar.Timer(), '] ',
+        progressbar.Bar(),
+        ' (', progressbar.ETA(), ') ',
+    ]
+
     # find all ilocs where date_tgt exists in previous years
     iloc_arr = getTradeIloc(tick_data, date_tgt)
-    i = 0
 
     # pre-allocate arrays, [tdp, 4:10]
     ref_arr = np.zeros([tdp, 6])
-    diff = np.zeros([len(iloc_arr), len(tick_data[:,0,0]), len(iloc_arr[0,:])])
-    print(diff.shape)
+
+    #nticks = len(iloc_arr[:,0,0])
+    
+    diff = np.zeros([])    
 
     # grab target array in top i loop
-    for ii in iloc_arr:
+    i = 0
+    for ii in progressbar.progressbar(iloc_arr, widgest=widgets):
         start = ii[0]
         end = start-tdp
         tar = tick_data[i, end:start, 4:10]
 
-        # loop through and grab each reference 
-        
+        # loop through and grab each reference         
         j = 0        
         for jj in tick_data[:,0,0]:
             k = 0
             if j != i:
-                # loop through each matching year
+                # loop through each matching i_loc
                 for kk in iloc_arr[0,:]:
                     ref_start_iloc = iloc_arr[j,k]
                     ref_end_iloc = ref_start_iloc - tdp
@@ -65,7 +80,7 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
                     k = k+1
             j = j+1
         i = i+1
-        
+
     print('done!')
 
     return -1
