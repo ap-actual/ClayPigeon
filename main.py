@@ -16,7 +16,8 @@ if __name__ == '__main__':
 
     date_tgt = np.array([tgt_year, tgt_month, tgt_day])
 
-    tick_data, tick_names = pull_ticks('tickers_really_short.dat', False)
+    tick_data, tick_names = pull_ticks('tickers.dat', False)
 
     diff = getDiff(tick_data, tick_names, date_tgt, tdp)
-    
+
+    diff.tofile('test.dat')    

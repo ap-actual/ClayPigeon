@@ -52,38 +52,55 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
     # pre-allocate arrays, [tdp, 4:10]
     ref_arr = np.zeros([tdp, 6])
 
-    #nticks = len(iloc_arr[:,0,0])
-    
-    diff = np.zeros([])    
+    nticks   = len(iloc_arr[:,0])
+    n_iloc = len(iloc_arr[0,:])  # number of columns in iloc_arr
+    nentries = 6+1  # nentries are [iloc, Low, Open, Close, %high, ...]
+    entry_labels = ['Low', 'Open', 'Close', 'Percent High', 'Percent Low', 'Percent Close']
+
+    diff = np.ones([nticks, nticks, n_iloc, nentries])
+    print(diff.shape)
+    diff = -1 * diff   
 
     # grab target array in top i loop
     i = 0
     for ii in progressbar.progressbar(iloc_arr, widgest=widgets):
-        start = ii[0]
-        end = start-tdp
-        tar = tick_data[i, end:start, 4:10]
 
-        # loop through and grab each reference         
-        j = 0        
-        for jj in tick_data[:,0,0]:
-            k = 0
-            if j != i:
-                # loop through each matching i_loc
-                for kk in iloc_arr[0,:]:
-                    ref_start_iloc = iloc_arr[j,k]
-                    ref_end_iloc = ref_start_iloc - tdp
-                    ref_arr = tick_data[j, ref_end_iloc:ref_start_iloc, 4:10]
-                    
-                    if ref_start_iloc != -1:
-                        diff = calculate_ssd(tar, ref_arr)
-                        #print(diff)
-                    k = k+1
-            j = j+1
+        # check target array exists
+        if iloc_arr[i,0] != -1:
+            start = iloc_arr[i,0]
+            end = start-tdp
+            tar = tick_data[i, end:start, 4:10]
+
+            # loop through and grab each reference         
+            j = 0        
+            for jj in iloc_arr:
+                k = 0
+                if j != i:
+                    # loop through each [j,:] in i_loc
+                    for kk in iloc_arr[0,:]:
+                        start_ref = iloc_arr[j,k]
+                        end_ref = start_ref-tdp
+                        ref = tick_data[j, end_ref:start_ref, 4:10]
+
+                        # loop through each column in tar, get diff
+                        l = 0
+                        for ll in tar[0,:]:
+                            diff_temp = calculate_ssd(tar[:,l],ref[:,l])
+                            diff[i, j, k, l+1] = diff_temp
+                            diff[i, j, k, 0] = iloc_arr[j,l]
+                            l = l+1
+
+                        k = k+1
+                j = j+1
+                
+        else:
+            print('no target arr found')
+            #TODO: fill diff with appropriate values
+
         i = i+1
-
     print('done!')
 
-    return -1
+    return diff
 
 def calculate_ssd(img1, img2):
     """Computing the sum of squared differences (SSD) between two images."""
