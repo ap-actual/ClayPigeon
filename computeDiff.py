@@ -57,9 +57,8 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
     nentries = 6+1  # nentries are [iloc, Low, Open, Close, %high, ...]
     entry_labels = ['Low', 'Open', 'Close', 'Percent High', 'Percent Low', 'Percent Close']
 
-    diff = np.ones([nticks, nticks, n_iloc, nentries])
-    print(diff.shape)
-    diff = -1 * diff   
+    diff = np.empty([nticks, nticks, n_iloc, nentries])
+    diff[:,:,:,:] = np.nan
 
     # grab target array in top i loop
     i = 0
@@ -74,10 +73,10 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
             # loop through and grab each reference         
             j = 0        
             for jj in iloc_arr:
-                k = 0
+                k = 1
                 if j != i:
                     # loop through each [j,:] in i_loc
-                    for kk in iloc_arr[0,:]:
+                    for kk in range(0,len(iloc_arr[0,:])-1):
                         start_ref = iloc_arr[j,k]
                         end_ref = start_ref-tdp
                         ref = tick_data[j, end_ref:start_ref, 4:10]
@@ -98,7 +97,7 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
             #TODO: fill diff with appropriate values
 
         i = i+1
-    print('done!')
+    print('finished computing diff...')
 
     return diff
 
