@@ -1,7 +1,7 @@
 import yfinance as yf
 import numpy as np
 from numpy import genfromtxt
-from parseDiff import getPredictionData, getBenchmark, getWeightedMin
+from parseDiff import getPredictionData, getWeightedMin
 from computeDiff import getDiff
 from utils import pull_ticks, normalize_tick
 import pandas as pd
@@ -37,6 +37,6 @@ def startBatch(refresh_diff, refresh_ticks, benchmark, date_tgt, w_arr, ticker_f
 
     ans = getWeightedMin(diff, w_arr)
 
-    getBenchmark(ans, tick_names, date_tgt, tdp)
+    getPredictionData(ans, tick_names, date_tgt, tdp)
 
     return 1
