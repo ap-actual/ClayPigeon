@@ -60,6 +60,8 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
     diff = np.empty([nticks, nticks, n_iloc, nentries])
     diff[:,:,:,:] = np.nan
 
+    print('computing new diff array...')
+
     # grab target array in top i loop
     i = 0
     for ii in progressbar.progressbar(iloc_arr, widgest=widgets):
@@ -87,8 +89,15 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
                             diff_temp = calculate_ssd(tar[:,l],ref[:,l])
                             diff[i, j, k, l+1] = diff_temp
                             diff[i, j, k, 0] = iloc_arr[j,l]
-                            l = l+1
 
+                            #if l == 5 and diff_temp < pclosemin:
+                            #    pclosemin = diff_temp
+                            #    pcloseloc = np.array([i, j, k])
+                            #    minrefarr = ref[:,l]
+                            #    mintararr = tar[:,l]
+                            #    minrefyear = tick_data[j,k,0]
+
+                            l = l+1
                         k = k+1
                 j = j+1
                 
@@ -97,13 +106,19 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
             #TODO: fill diff with appropriate values
 
         i = i+1
-    print('finished computing diff...')
 
+    print('finished computing diff...')
+    
     return diff
 
 def calculate_ssd(img1, img2):
     """Computing the sum of squared differences (SSD) between two images."""
     if img1.shape != img2.shape:
         print("Images don't have the same shape.")
+        print('tar = ' )
+        print(img1)
+        print('ref = ')
+        print(img2)
+        
         return
     return np.sum((np.array(img1, dtype=np.float32) - np.array(img2, dtype=np.float32))**2)

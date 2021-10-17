@@ -1,11 +1,13 @@
 import yfinance as yf
 import numpy as np
 from numpy import genfromtxt
+import parseDiff
+from computeDiff import getDiff
 import pandas as pd
 import progressbar
+import datetime as dt
 
-
-def pull_ticks(fname, refresh_bool):
+def pull_ticks(fname, date_tgt, refresh_bool):
     # setup progress bar parameters
     widgets=[
         ' [', progressbar.Timer(), '] ',
@@ -23,6 +25,10 @@ def pull_ticks(fname, refresh_bool):
     ans_arr = np.zeros([len(ref_ticks), np_len, 10])
     ans_ticks = []
 
+    tgtdate = str(date_tgt[0]) + '-' + str(date_tgt[1]) + '-' + str(date_tgt[2])
+    print(tgtdate)
+    date_tgt = dt.datetime.strptime(tgtdate, "%Y-%m-%d")
+
     if refresh_bool:
         print('Refreshing ticks from yfinance, this may take a minute ...')
     else:
@@ -33,8 +39,17 @@ def pull_ticks(fname, refresh_bool):
             if refresh_bool:
                 tick = yf.Ticker(ref_tick)
                 reference = tick.history(period="10y")
+
+                # check that last element in tick dataframe is target date
+
+                last_date = reference.iloc[-1].name
+                if(last_date < date_tgt):
+                    print('WARNING! last value of reference [' + str(ref_tick) + '] does not match target date of ' + str(date_tgt))
+                    print('It lives in the past at ' + str(last_date))
+
                 reference = normalize_tick(reference, np_len)
                 np.savetxt('local_data/ref_dat_' + str(ref_tick) + '.csv', reference, delimiter=",")
+                
             else:
                 reference = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',')
         
@@ -45,6 +60,9 @@ def pull_ticks(fname, refresh_bool):
 
         except OSError:
             print(str(ref_tick) + ' could not be found in local_data, will omit from calculations')
+
+        except IndexError:
+            print('Could not find stock ticker ' + str(ref_tick) + ' from yfinance, omitting in calculations')            
 
         except AttributeError: 
             print('Could not find stock ticker ' + str(ref_tick) + ' from yfinance, omitting in calculations')
@@ -57,7 +75,7 @@ def pull_ticks(fname, refresh_bool):
 
 def normalize_tick(df, np_len):
 
-    arr = np.zeros([np_len, 10])
+    arr = np.zeros([len(df), 10])
 
     # normalize target high & low values to percent of opening values, create new columns for 'day of week' and 'week of year'
     df['percent_high'] = np.where(df['High'] < 1, df['High'], df['High']/df['Open'])
