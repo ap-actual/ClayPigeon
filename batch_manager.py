@@ -35,8 +35,21 @@ def startBatch(refresh_diff, refresh_ticks, benchmark, date_tgt, w_arr, ticker_f
         tick_names = file_lines.split("\n")
 
 
-    ans = getWeightedMin(diff, w_arr)
+    ans = getWeightedMin(diff, w_arr, False, 0)
 
-    getPredictionData(ans, tick_names, date_tgt, tdp)
+    roi = getPredictionData(ans, tick_names, date_tgt, tdp)
+    stoploop = False
+    if roi > 1: 
+        stoploop = True
+    
+    while stoploop == False: 
+        ans = getWeightedMin(diff, w_arr, True, ans)
+        roi = getPredictionData(ans, tick_names, date_tgt, tdp)
+        print(roi)
+        if roi > 1.0: 
+            stoploop = True
+    
 
+    print(roi)
+    
     return 1

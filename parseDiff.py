@@ -7,7 +7,7 @@ from plot_tools import plotComparison
 from utils import normalize_tick
 from numpy import genfromtxt
 
-def getWeightedMin(diff, w_arr):
+def getWeightedMin(diff, w_arr, loop_bool, val):
 
     widgets=[
         ' [', progressbar.Timer(), '] ',
@@ -29,6 +29,9 @@ def getWeightedMin(diff, w_arr):
                 for l in range(1,len(diff[0,0,0,:])):
                     diff[i,j,k,l] = diff[i,j,k,l]*w_arr[l-1]
                 diff_weighted[i,j,k] = np.sum(diff[i,j,k,1:])
+
+    if loop_bool:
+        diff_weighted[val[0], val[1], val[2]] = np.nan
 
     ssd_min = np.nanmin(diff_weighted)
     print('Absolute min = '+str(ssd_min)+' and is at ...')
@@ -58,9 +61,10 @@ def getPredictionData(iloc_min, tick_names, date_tgt, tdp):
     ref_i = np.where(np.logical_and.reduce((ref[:,0] == ref_year, ref[:,1] == td_week,  ref[:,2] == td_day_of_week)))
     tar_i = np.where(np.logical_and.reduce((tar[:,0] == date_tgt[0], tar[:,1] == td_week,  tar[:,2] == td_day_of_week)))
 
-    print(ref_i[0][0])
+    # get one day extra of ref_i
+    ref_i[0][0] = ref_i[0][0] + 1
 
-    ref_ii = ref_i[0][0] - tdp
+    ref_ii = ref_i[0][0] - tdp - 1
     tar_ii = tar_i[0][0] - tdp
 
     tar_data = tar[tar_ii:tar_i[0][0], 9]
@@ -68,4 +72,4 @@ def getPredictionData(iloc_min, tick_names, date_tgt, tdp):
 
     plotComparison(tar_data, ref_data, tdp, tar_tick, ref_tick, date_tgt, ref_year)
 
-    return -1
+    return ref_data[len(ref_data)-1]
