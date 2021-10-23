@@ -3,16 +3,18 @@ from batch_manager import startBatch
 
 if __name__ == '__main__':
 
-    refresh_diff = False
     refresh_ticks = False
 
     benchmark = True
 
-    tdp = 5
+    tdp = 6
+
+    ph_thresh = 1.05
+    pc_thresh = 1.01
 
     tgt_year = 2021
     tgt_month = 10
-    tgt_day = 19
+    tgt_day = 20
     date_tgt = np.array([tgt_year, tgt_month, tgt_day])
 
 
@@ -21,4 +23,4 @@ if __name__ == '__main__':
 #   w_arr = [low, open, close, %high, %low, %close]
     w_arr = [0, 0, 0, 0, 0, 1]
 
-    startBatch(refresh_diff, refresh_ticks, benchmark, date_tgt, w_arr, ticker_fname, tdp)
+    startBatch(refresh_ticks, benchmark, date_tgt, w_arr, ticker_fname, tdp)

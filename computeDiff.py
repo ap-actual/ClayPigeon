@@ -90,13 +90,6 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
                             diff[i, j, k, l+1] = diff_temp
                             diff[i, j, k, 0] = iloc_arr[j,l]
 
-                            #if l == 5 and diff_temp < pclosemin:
-                            #    pclosemin = diff_temp
-                            #    pcloseloc = np.array([i, j, k])
-                            #    minrefarr = ref[:,l]
-                            #    mintararr = tar[:,l]
-                            #    minrefyear = tick_data[j,k,0]
-
                             l = l+1
                         k = k+1
                 j = j+1
@@ -114,11 +107,7 @@ def getDiff(tick_data, tick_names, date_tgt, tdp):
 def calculate_ssd(img1, img2):
     """Computing the sum of squared differences (SSD) between two images."""
     if img1.shape != img2.shape:
-        print("Images don't have the same shape.")
-        print('tar = ' )
-        print(img1)
-        print('ref = ')
-        print(img2)
-        
+        #print("Images don't have the same shape.")
+        #TODO: check accumulation of mismatch, throw flag is something appears off
         return
     return np.sum((np.array(img1, dtype=np.float32) - np.array(img2, dtype=np.float32))**2)
