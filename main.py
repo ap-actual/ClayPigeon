@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
     ticker_fname = 'tickers.dat'
 
+	# this is a comment to test out git commits from VS
 #   w_arr = [low, open, close, %high, %low, %close]
     w_arr = [0, 0, 0, 0, 0, 1]
 
