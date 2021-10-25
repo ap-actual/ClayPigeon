@@ -4,7 +4,7 @@ import progressbar
 import datetime as dt
 from datetime import timedelta
 import yfinance as yf
-from plot_tools import plotComparison, plotSubPlotComparison
+from plot_tools import plotComparison, plotSubPlotComparison, plotScoreScatter
 from utils import normalize_tick
 from numpy import genfromtxt
 import csv
@@ -12,7 +12,8 @@ from os.path import exists
 
 def getWeightedMin(diff, w_arr, tick_names, date_tgt, tdp, diffscoredatfilename, benchmark_bool):
 
-    roi_threshold = 1.01
+    roi_pc_threshold = 1.02
+    roi_ph_threshold = 1.0
 
     widgets=[
         ' [', progressbar.Timer(), '] ',
@@ -25,6 +26,9 @@ def getWeightedMin(diff, w_arr, tick_names, date_tgt, tdp, diffscoredatfilename,
 
     diff_weighted = np.empty([nticks, nticks, n_iloc])
     diff_weighted[:,:,:] = np.nan
+
+    if benchmark_bool: 
+        score_arr = np.empty([100, 10])
 
     print('finding absolute min in diff...')
 
@@ -39,54 +43,57 @@ def getWeightedMin(diff, w_arr, tick_names, date_tgt, tdp, diffscoredatfilename,
     if benchmark_bool:
         loop_bool = True
         ii = 0
-        if exists(diffscoredatfilename):
-            print('Diff scoring file already exists!')
-        
-        else:
-            while loop_bool == True:
-                try:
-                    ssd_min = np.nanmin(diff_weighted)
-                    #print('Absolute min = '+str(ssd_min)+' and is at ...')
 
-                    ans = np.where(diff_weighted == np.nanmin(diff_weighted))
-                    #print(str(ans[0][0])+','+str(ans[1][0])+','+str(ans[2][0]))
-                    diff_weighted[ans[0], ans[1], ans[2]] = np.nan
+        print('starting scoring save...')
+        while loop_bool == True:
+            try:
+                ssd_min = np.nanmin(diff_weighted)
+                ans = np.where(diff_weighted == np.nanmin(diff_weighted))
 
-                    score = getBenchmarkScore(ans, tick_names, date_tgt, tdp)
-                    score[0] = ssd_min
-                    with open(diffscoredatfilename,'a') as fd:
-                        for jj in range(len(score)):
-                            fd.write(str(score[jj])+',')
-                        fd.write('\n')
-                    
-                    ii = ii+1
-                except:
-                    if ii > 100000:
-                        loop_bool = False
-                    ii = ii + 1
+                diff_weighted[ans[0], ans[1], ans[2]] = np.nan
+                score = getBenchmarkScore(ans, tick_names, date_tgt, tdp)
+                score[0] = ssd_min
+                score_arr[ii] = score
+                
+                ii = ii+1
+            except:
+                if ii > 100:
+                    loop_bool = False
+                ii = ii + 1
 
+        np.savetxt(diffscoredatfilename, score_arr, delimiter=",")
+        plotScoreScatter(score_arr)
 
+    else:
+        rank = 0
+        loop_bool = True
+        while loop_bool == True:
 
-    # while loop_bool == True:
-    #     ssd_min = np.nanmin(diff_weighted)
-    #     print('Absolute min = '+str(ssd_min)+' and is at ...')
+            ssd_min = np.nanmin(diff_weighted)
+            ans = np.where(diff_weighted == np.nanmin(diff_weighted))
+            diff_weighted[ans[0], ans[1], ans[2]] = np.nan
 
-    #     ans = np.where(diff_weighted == np.nanmin(diff_weighted))
-    #     print(str(ans[0][0])+','+str(ans[1][0])+','+str(ans[2][0]))
+            print('Absolute min = '+str(ssd_min)+' and is at ...')            
+            print(str(ans[0][0])+','+str(ans[1][0])+','+str(ans[2][0]))
 
-    #     roi = getBenchmarkScore(ans, tick_names, date_tgt, tdp)
+            roi = getPredictionData(ans, tick_names, date_tgt, tdp)
+            rank = rank+1
+            print('roi = ')
+            print(roi)
+            print ('rank = ')
+            print(rank)
+            if roi[0] > roi_pc_threshold and roi[1] > roi_ph_threshold:
+                loop_bool = False
+            
+            else:
+                print('did not pass threshold, looping again...')
 
-    #     if roi > roi_threshold:
-    #         loop_bool = False
-        
-    #     else:
-    #         diff_weighted[ans[0], ans[1], ans[2]] = np.nan
-    #         print('did not pass threshold, looping again...')
-
-    return 1
+    return roi
 
 
 def getPredictionData(iloc_min, tick_names, date_tgt, tdp): 
+
+    returnme = np.zeros(2)
 
     tar_tick = tick_names[iloc_min[0][0]]
     ref_tick = tick_names[iloc_min[1][0]]
@@ -105,18 +112,25 @@ def getPredictionData(iloc_min, tick_names, date_tgt, tdp):
     ref_i = np.where(np.logical_and.reduce((ref[:,0] == ref_year, ref[:,1] == td_week,  ref[:,2] == td_day_of_week)))
     tar_i = np.where(np.logical_and.reduce((tar[:,0] == date_tgt[0], tar[:,1] == td_week,  tar[:,2] == td_day_of_week)))
 
-    # get one day extra of ref_i
-    ref_i[0][0] = ref_i[0][0] + 1
+    try:
+        # get one day extra of ref_i
+        ref_i[0][0] = ref_i[0][0] + 1
+        tar_i[0][0] = tar_i[0][0]
 
-    ref_ii = ref_i[0][0] - tdp - 1
-    tar_ii = tar_i[0][0] - tdp
+        ref_ii = ref_i[0][0] - tdp - 1
+        tar_ii = tar_i[0][0] - tdp
 
-    tar_data = tar[tar_ii:tar_i[0][0], 9]
-    ref_data = ref[ref_ii:ref_i[0][0], 9]
+        tar_data = tar[tar_ii:tar_i[0][0], :]
+        ref_data = ref[ref_ii:ref_i[0][0], :]
+        print(tar_tick)
+        returnme[0] = ref_data[len(ref_data)-1, 9]
+        returnme[1] = ref_data[len(ref_data)-1, 7]
 
-    plotComparison(tar_data, ref_data, tdp, tar_tick, ref_tick, date_tgt, ref_year)
+    except:
+        returnme[0] = 0
+        returnme[1] = 0
 
-    return ref_data[len(ref_data)-1]
+    return returnme
 
 def getBenchmarkScore(iloc_min, tick_names, date_tgt, tdp): 
 

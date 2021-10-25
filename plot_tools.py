@@ -59,3 +59,38 @@ def plotSubPlotComparison(tar_dat, ref_dat, tdp, tar_tick, ref_tick, date_tgt, r
     plt.show()
 
     return -1
+
+def plotScoreScatter(score_arr): 
+
+    print(score_arr)
+
+    x = score_arr[:,0]
+
+    y1 = score_arr[:,9]
+    y2 = score_arr[:,8]
+
+    plt.scatter(x,y1, s=10, color='tab:blue')
+    plt.scatter(x,y2, s=10, color='tab:orange')
+    plt.legend(['Percent Close', 'Percent High'])
+    
+    z = np.polyfit(x, y1, 1)
+    p = np.poly1d(z)
+    plt.plot(x,p(x),color='tab:blue', linewidth=1, linestyle=':')
+
+    z = np.polyfit(x, y2, 1)
+    p = np.poly1d(z)
+    plt.plot(x,p(x),color='tab:orange', linewidth=1, linestyle=':')
+
+
+    plt.grid()
+    plt.ylabel('Error in prediction')
+    plt.xlabel('SSD')
+    
+    fig = plt.gcf()
+    fig.set_size_inches(9, 4.5)
+    fig.savefig('test2png.png', dpi=100)
+
+    plt.show()
+
+
+    return 1
