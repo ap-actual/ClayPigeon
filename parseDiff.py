@@ -49,20 +49,23 @@ def getWeightedMin(diff, w_arr, tick_names, date_tgt, tdp, diffscoredatfilename,
             try:
                 ssd_min = np.nanmin(diff_weighted)
                 ans = np.where(diff_weighted == np.nanmin(diff_weighted))
-
-                diff_weighted[ans[0], ans[1], ans[2]] = np.nan
-                score = getBenchmarkScore(ans, tick_names, date_tgt, tdp)
-                score[0] = ssd_min
-                score_arr[ii] = score
-                
-                ii = ii+1
+                diff_weighted[ans[0], ans[1], ans[2]] = np.nan                
+                roi = getPredictionData(ans, tick_names, date_tgt, tdp)
+                #print(roi)
+                if roi[0] > 0 and roi[1] > 0:
+                    score = getBenchmarkScore(ans, tick_names, date_tgt, tdp)
+                    score[0] = ssd_min
+                    score_arr[ii] = score
+                    
+                    ii = ii+1
             except:
-                if ii > 100:
-                    loop_bool = False
                 ii = ii + 1
 
+            if ii > 100:
+                loop_bool = False
+
         np.savetxt(diffscoredatfilename, score_arr, delimiter=",")
-        plotScoreScatter(score_arr)
+        plotScoreScatter(score_arr, diffscoredatfilename)
 
     else:
         rank = 0
@@ -106,8 +109,8 @@ def getPredictionData(iloc_min, tick_names, date_tgt, tdp):
     td_day_of_week = dt.date(date_tgt[0], date_tgt[1], date_tgt[2]).weekday()
 
     # load data from local_data
-    ref = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',')
-    tar = genfromtxt('local_data/ref_dat_' + str(tar_tick) + '.csv', delimiter=',')
+    ref = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',', skip_header=1)
+    tar = genfromtxt('local_data/ref_dat_' + str(tar_tick) + '.csv', delimiter=',', skip_header=1)
 
     ref_i = np.where(np.logical_and.reduce((ref[:,0] == ref_year, ref[:,1] == td_week,  ref[:,2] == td_day_of_week)))
     tar_i = np.where(np.logical_and.reduce((tar[:,0] == date_tgt[0], tar[:,1] == td_week,  tar[:,2] == td_day_of_week)))
@@ -122,7 +125,7 @@ def getPredictionData(iloc_min, tick_names, date_tgt, tdp):
 
         tar_data = tar[tar_ii:tar_i[0][0], :]
         ref_data = ref[ref_ii:ref_i[0][0], :]
-        print(tar_tick)
+        #print(tar_tick)
         returnme[0] = ref_data[len(ref_data)-1, 9]
         returnme[1] = ref_data[len(ref_data)-1, 7]
 
@@ -145,8 +148,8 @@ def getBenchmarkScore(iloc_min, tick_names, date_tgt, tdp):
     td_day_of_week = dt.date(date_tgt[0], date_tgt[1], date_tgt[2]).weekday()
 
     # load data from local_data
-    ref = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',')
-    tar = genfromtxt('local_data/ref_dat_' + str(tar_tick) + '.csv', delimiter=',')
+    ref = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',', skip_header=1)
+    tar = genfromtxt('local_data/ref_dat_' + str(tar_tick) + '.csv', delimiter=',', skip_header=1)
 
     ref_i = np.where(np.logical_and.reduce((ref[:,0] == ref_year, ref[:,1] == td_week,  ref[:,2] == td_day_of_week)))
     tar_i = np.where(np.logical_and.reduce((tar[:,0] == date_tgt[0], tar[:,1] == td_week,  tar[:,2] == td_day_of_week)))

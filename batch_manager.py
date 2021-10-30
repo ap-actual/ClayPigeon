@@ -14,8 +14,8 @@ def startBatch(refresh_ticks, benchmark, date_tgt, w_arr, ticker_fname, tdp):
     tgt_year = date_tgt[0]
     tgt_month = date_tgt[1]
     tgt_day = date_tgt[2]
-    diffdatfilename = 'diff_data/' +  str(tgt_year)+str(tgt_month)+str(tgt_day)+'tdp'+str(tdp)+'_'+str(w_arr[0])+str(w_arr[1])+str(w_arr[2])+str(w_arr[3])+str(w_arr[4])+str(w_arr[5])+'_diff.npy'
-    diffscoredatfilename = 'score_data/' +  str(tgt_year)+str(tgt_month)+str(tgt_day)+'tdp'+str(tdp)+'_'+str(w_arr[0])+str(w_arr[1])+str(w_arr[2])+str(w_arr[3])+str(w_arr[4])+str(w_arr[5])+'_diff_score.csv'
+    diffdatfilename = 'diff_data/' +  str(tgt_year)+str(tgt_month)+str(tgt_day)+'tdp'+str(tdp)+'_diff.npy'
+    diffscoredatfilename = 'score_data/' +  str(tgt_year)+str(tgt_month)+str(tgt_day)+'tdp'+str(tdp)+'_'+str(w_arr[0])+'_'+str(w_arr[1])+'_'+str(w_arr[2])+'_'+str(w_arr[3])+'_'+str(w_arr[4])+'_'+str(w_arr[5])+'_diff_score.csv'
     tickdatfname = 'diff_data/' + str(tgt_year)+str(tgt_month)+str(tgt_day)+'tdp'+str(tdp)+'_diff_ticks.dat'
     date_tgt = np.array([tgt_year, tgt_month, tgt_day])
 

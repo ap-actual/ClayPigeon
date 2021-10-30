@@ -51,7 +51,7 @@ def pull_ticks(fname, date_tgt, refresh_bool):
                 np.savetxt('local_data/ref_dat_' + str(ref_tick) + '.csv', reference, delimiter=",")
                 
             else:
-                reference = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',')
+                reference = genfromtxt('local_data/ref_dat_' + str(ref_tick) + '.csv', delimiter=',', skip_header=1)
         
             llen = len(reference[:,0])
             ans_ticks.append(str(ref_tick))
