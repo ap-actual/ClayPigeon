@@ -51,8 +51,8 @@ def checkScoreFile(fname, tdp, w_arr):
 
 if __name__ == '__main__':
 
-    w_arr = [0,0,0,0.33,0.33,0.33]
-    tdp = 11
+    w_arr = [0,0,0,1,0,0]
+    tdp = 5
 
     directory = r'C:\Users\brian\Documents\ClayPigeonV2\diff_data'
 
